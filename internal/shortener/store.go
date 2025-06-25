@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"sort"
 	"sync"
+
+	"golang.org/x/net/publicsuffix"
 )
 
 type DomainCount struct {
@@ -68,5 +70,11 @@ func extractDomain(rawURL string) string {
 	if err != nil {
 		return "unknown"
 	}
-	return u.Hostname()
+	host := u.Hostname()
+
+	eTLDPlusOne, err := publicsuffix.EffectiveTLDPlusOne(host)
+	if err != nil {
+		return host
+	}
+	return eTLDPlusOne
 }
