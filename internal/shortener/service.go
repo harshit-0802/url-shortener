@@ -7,6 +7,7 @@ import (
 type Store interface {
 	Save(code, url string) error
 	Load(code string) (string, error)
+	GetTopDomains(n int) []DomainCount
 }
 
 type Service struct {
@@ -41,4 +42,8 @@ func (s *Service) ResolveURL(code string) (string, error) {
 		return "", errors.New("not found")
 	}
 	return url, nil
+}
+
+func (s *Service) GetTopDomains(n int) []DomainCount {
+	return s.store.GetTopDomains(n)
 }

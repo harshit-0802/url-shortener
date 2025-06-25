@@ -11,6 +11,12 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// DomainCount defines model for DomainCount.
+type DomainCount struct {
+	Count  *int    `json:"count,omitempty"`
+	Domain *string `json:"domain,omitempty"`
+}
+
 // ShortenRequest defines model for ShortenRequest.
 type ShortenRequest struct {
 	Url string `json:"url"`
@@ -26,6 +32,9 @@ type ShortenUrlJSONRequestBody = ShortenRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Get top 3 most shortened domains
+	// (GET /metrics)
+	Metrics(w http.ResponseWriter, r *http.Request)
 	// Shorten a long URL
 	// (POST /shorten)
 	ShortenUrl(w http.ResponseWriter, r *http.Request)
@@ -37,6 +46,12 @@ type ServerInterface interface {
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
+
+// Get top 3 most shortened domains
+// (GET /metrics)
+func (_ Unimplemented) Metrics(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
 
 // Shorten a long URL
 // (POST /shorten)
@@ -58,6 +73,20 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// Metrics operation middleware
+func (siw *ServerInterfaceWrapper) Metrics(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.Metrics(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // ShortenUrl operation middleware
 func (siw *ServerInterfaceWrapper) ShortenUrl(w http.ResponseWriter, r *http.Request) {
@@ -211,6 +240,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/metrics", wrapper.Metrics)
+	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/shorten", wrapper.ShortenUrl)
 	})

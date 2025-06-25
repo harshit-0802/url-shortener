@@ -53,6 +53,20 @@ paths:
         '404':
           description: Short URL not found
 
+  /metrics:
+    get:
+      summary: Get top 3 most shortened domains
+      operationId: Metrics
+      responses:
+        '200':
+          description: List of top domains with counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DomainCount'
+
 components:
   schemas:
     ShortenRequest:
@@ -71,3 +85,13 @@ components:
         short_url:
           type: string
           example: http://localhost:8080/abc123
+
+    DomainCount:
+      type: object
+      properties:
+        domain:
+          type: string
+          example: youtube.com
+        count:
+          type: integer
+          example: 3

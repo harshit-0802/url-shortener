@@ -44,3 +44,23 @@ func (h *Handler) RedirectUrl(w http.ResponseWriter, r *http.Request, code strin
 	}
 	http.Redirect(w, r, url, http.StatusFound)
 }
+
+func (h *Handler) Metrics(w http.ResponseWriter, r *http.Request) {
+	// Get top 3 domains
+	topDomains := h.svc.GetTopDomains(3)
+
+	var resp []gen.DomainCount
+	for _, d := range topDomains {
+		resp = append(resp, gen.DomainCount{
+			Domain: &d.Domain,
+			Count:  &d.Count,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, "Failed to encode metrics response", http.StatusInternalServerError)
+		return
+	}
+
+}
