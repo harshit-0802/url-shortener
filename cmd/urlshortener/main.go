@@ -9,7 +9,9 @@ import (
 )
 
 func main() {
-	svc := shortener.NewService(nil)
+	store := shortener.NewInMemoryStore()
+	urlGenerator := shortener.NewSHA1Base64Generator()
+	svc := shortener.NewService(store, urlGenerator)
 	handler := shortener.NewHandler(svc)
 	router := gen.HandlerWithOptions(handler, gen.ChiServerOptions{})
 

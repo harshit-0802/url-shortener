@@ -10,17 +10,25 @@ type Store interface {
 }
 
 type Service struct {
-	store Store
+	store     Store
+	generator ShortCodeGenerator
 }
 
-func NewService(store Store) *Service {
-	return &Service{store: store}
+func NewService(store Store, generator ShortCodeGenerator) *Service {
+	return &Service{
+		store:     store,
+		generator: generator,
+	}
 }
 
 func (s *Service) ShortenURL(url string) (string, error) {
 	// Generate code and save mapping
-	code := "abc123" // TODO: Use a generator here
-	err := s.store.Save(code, url)
+	code, err := s.generator.Generate(url)
+	if err != nil {
+		return "", err
+	}
+
+	err = s.store.Save(code, url)
 	if err != nil {
 		return "", err
 	}

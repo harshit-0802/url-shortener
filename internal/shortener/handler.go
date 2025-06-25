@@ -37,5 +37,10 @@ func (h *Handler) ShortenUrl(w http.ResponseWriter, r *http.Request) {
 
 // GET /{code}
 func (h *Handler) RedirectUrl(w http.ResponseWriter, r *http.Request, code string) {
-	http.Redirect(w, r, "", http.StatusFound)
+	url, err := h.svc.ResolveURL(code)
+	if err != nil {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
+	http.Redirect(w, r, url, http.StatusFound)
 }
